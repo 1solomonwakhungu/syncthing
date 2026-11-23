@@ -85,6 +85,9 @@ func VectorFromString(s string) (Vector, error) {
 			return Vector{}, fmt.Errorf("bad id in pair %q", pair)
 		}
 		var idbs [8]byte
+		if len(idslice) > len(idbs) {
+			return Vector{}, fmt.Errorf("bad id in pair %q: too long", pair)
+		}
 		copy(idbs[8-len(idslice):], idslice)
 		id := binary.BigEndian.Uint64(idbs[:])
 		val, err := strconv.ParseUint(valStr, 10, 64)

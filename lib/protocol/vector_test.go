@@ -388,3 +388,50 @@ func TestCompare(t *testing.T) {
 		}
 	}
 }
+
+func TestVectorFromString(t *testing.T) {
+	validCases := []struct {
+		input    string
+		expected Vector
+	}{
+		{
+			input:    "000000000000002a:1",
+			expected: Vector{Counters: []Counter{{ID: 42, Value: 1}}},
+		},
+		{
+			input:    "2a:5,ffffffffffffffff:42",
+			expected: Vector{Counters: []Counter{{ID: 42, Value: 5}, {ID: math.MaxUint64, Value: 42}}},
+		},
+		{
+			input:    ":0",
+			expected: Vector{Counters: []Counter{{ID: 0, Value: 0}}},
+		},
+	}
+
+	for _, tc := range validCases {
+		got, err := VectorFromString(tc.input)
+		if err != nil {
+			t.Errorf("VectorFromString(%q) unexpected error: %v", tc.input, err)
+			continue
+		}
+		if got.Compare(tc.expected) != Equal {
+			t.Errorf("VectorFromString(%q) == %+v (expected %+v)", tc.input, got, tc.expected)
+		}
+	}
+
+	invalidCases := []string{
+		"",
+		"notapair",
+		"zz:1",
+		"010203040506070809:1",
+		"0102030405060708090a0b0c:42",
+		"2a:notanumber",
+		"2a:-1",
+	}
+
+	for _, input := range invalidCases {
+		if got, err := VectorFromString(input); err == nil {
+			t.Errorf("VectorFromString(%q) == %+v, expected error", input, got)
+		}
+	}
+}
